@@ -8,12 +8,61 @@ Superbullet package is used for creating this webpage: https://github.com/superm
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
+    <!-- Use aframe -->
     <script src="https://aframe.io/releases/0.9.2/aframe.min.js"></script>
+    <!-- Use shooter kit -->
     <script src="dist/aframe-super-shooter-kit.min.js"></script>
+    <!-- Use physics system -->
+    <script src="//cdn.rawgit.com/donmccurdy/aframe-physics-system/v4.0.1/dist/aframe-physics-system.min.js"></script>
     <script>
-        AFRAME.registerComponent('click-to-shoot', {
+    
+    AFRAME.registerComponent('click-to-shoot', {
             init: function () {
         document.body.addEventListener('mousedown', () => { this.el.emit('shoot'); });
+      }
+    });
+
+    AFRAME.registerComponent('random-color', {
+        dependencies: ['material'],
+
+        init: function () { 
+            setInterval( () => 
+                { this.el.setAttribute('material', 'color', getRandomColor());}, 
+         
+            300);
+            // Set material component's color property to a random color.
+            }
+        }
+    );
+
+    function getRandomColor() {
+    const letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++ ) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+        return color;
+    }
+
+    AFRAME.registerComponent('hit-handler', {
+      dependencies: ['material'],
+
+      init: function () {
+        var color;
+        var el = this.el;
+
+        color = new THREE.Color();
+        color.set('#57B8EE');
+        el.components.material.material.color.copy(color);
+        el.addEventListener('hit', () => {
+          color.addScalar(0.05);
+          el.components.material.material.color.copy(color);
+        });
+
+        el.addEventListener('die', () => {
+          color.setRGB(1, 0, 0);
+          el.components.material.material.color.copy(color);
+        });
       }
     });
 
@@ -21,33 +70,56 @@ Superbullet package is used for creating this webpage: https://github.com/superm
 </head>
 <body>
     
-    <a-scene>
+    <a-scene physics="debug: true">
+
+        <!-- Bullet entity -->
+        
         <a-entity 
             id="bulletTemplate" 
             bullet 
             geometry="primitive: sphere; radius: 0.1" 
-            material="color: orange"></a-entity>
-        <a-box 
+            material="color: blue">
+        </a-entity>
+        
+        <!-- Object entity -->
+        <a-entity 
+            class="target" 
+            target="healthPoints: 10" 
+            geometry="primitive: box" 
+            material="color: blue" 
             position="-1 0.5 -3" 
-            rotation="0 45 0" 
-            color="#4CC3D9"></a-box>
+            hit-handler>
+        </a-entity>   
+
         <a-sphere 
             position="0 1.25 -5" 
-            radius="1.25" 
+            radius="1.25"
+            random-color
             color="#EF2D5E"></a-sphere>
+
         <a-cylinder 
             position="1 0.75 -3" 
             radius="0.5" 
-            height="1.5" color="#FFC65D"></a-cylinder>
+            height="1.5" color="#FFC65D">
+        </a-cylinder>
+        
         <a-plane 
             position="0 0 -4" 
             rotation="-90 0 0" 
             width="4" 
             height="4" 
-            color="#7BC8A4"></a-plane>
+            color="#7BC8A4"
+            static-body>
+        </a-plane>
+        
+        <!-- Camera -->
         <a-camera id="camera" shooter click-to-shoot></a-camera>
+        
+        <!-- Sky -->
         <a-sky 
-            color="#ECECEC"></a-sky>
+            color="#ECECEC">
+        </a-sky>
+    
     </a-scene>
 </body>
 </html>
